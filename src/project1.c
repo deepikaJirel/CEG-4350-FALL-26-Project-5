@@ -15,7 +15,7 @@ static int cursorRow = 0;
 // This function runs when compiled with the #define PROJECT 1 flag
 int kernel()
 {
-	// Print hello world to the display
+	print("Hello World!\n");// Print hello world to the display
 	return 0;
 }
 #endif
@@ -25,10 +25,12 @@ int kernel()
 // This can also be set independently of putchar() to print at any x, y coordinate on the screen
 int setcursor(int x, int y)
 {
-	(void)x; // Remove this when implementing your function
-	(void)y; // Remove this when implementing your function
-	(void)cursorCol; // Remove this when implementing your function
-	(void)cursorRow; // Remove this when implementing your function
+	cursorCol = x % SCREEN_WIDTH;
+cursorRow = y + (x / SCREEN_WIDTH);
+if(cursorRow>= SCREEN_HEIGHT){
+	scroll(cursorRow - SCREEN_HEIGHT + 1);
+	cursorRow = SCREEN_HEIGHT - 1 ;
+}
 	return 0;
 }
 
@@ -36,21 +38,48 @@ int setcursor(int x, int y)
 // Every two addresses contain a character and a color
 char putchar(char character)
 {
-	return character;
+if (character == '\n')
+{
+    setcursor(0, cursorRow + 1);
+    return character;
 }
+
+uint8 *addr = (uint8 *)
+    (2 * (cursorCol + cursorRow * SCREEN_WIDTH) + VIDEO_MEM);
+
+*addr = character;
+*(addr + 1) = TEXT_COLOR;
+
+setcursor(cursorCol + 1, cursorRow);
+return character;
+}
+
 
 // Print the character array (string) using putchar()
 // Print until we find a NULL terminator (0)
 int print(char string[]) 
 {
-	(void)string; // Remove this when implementing your function
-	// Use character count to track how many characters we print
-	int characterCount = 0;
-	return characterCount;
+    int characterCount = 0;
+
+    while (string[characterCount] != 0)
+    {
+        putchar(string[characterCount]);
+        characterCount++;
+    }	
+return characterCount;
 }
 
 // Clear the screen by placing a ' ' character in every character location
 void clearscreen()
 {
-	return;
+    for (int i = 0; i < SCREEN_WIDTH * SCREEN_HEIGHT; i++)
+    {
+        uint8 *addr = (uint8 *)(2 * i + VIDEO_MEM);
+        *addr = ' ';
+        *(addr + 1) = TEXT_COLOR;
+    }
+
+    setcursor(0, 0);
+    return;
+	
 }
